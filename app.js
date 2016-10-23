@@ -20,18 +20,26 @@ var orders = [];
 
 // Write Data
 function writeToFile(){
-    results = _.map(orders, function(temp){
-        return {"Timestamp": orders.time, 
-                "BUY/SELL":orders.type,
-                "Amount":orders.amount,
-                "Currency": orders.currency,
-                "Conversion Rate": orders.rating
-               };
-        });
+    var results = [];
+    var headings=["Timestamp", "BUY/SELL","Amount", "Currency", "Conversion Rate"];
     var writableStream = fs.createWriteStream("my.csv");
-    csv.write(results, {headers: true}).pipe(writableStream);
-    
+    csv.write([headings], {headers: true}).pipe(writableStream);
+    for (var i=0; i<orders.length; i++){
+        results[i] = _.map(orders, function(temp){
+            return [orders[i].time, 
+                    orders[i].buysell,
+                    orders[i].amount,
+                    orders[i].currency,
+                    orders[i].rating
+                   ];
+            });
+            csv.write(["", [orders[i].time, 
+                    orders[i].buysell,
+                    orders[i].amount,
+                    orders[i].currency,
+                    orders[i].rating]], {headers: false}).pipe(writableStream);
     }
+}
 
 
 function Orders(time, buysell, amount, currency, status, rating){
@@ -81,7 +89,7 @@ function getOutput(output) {
         case "buy":
             // Check if number
             if (isNaN(temp[1]) == false){
-                getRate(temp[2], temp);   
+                getRate(temp[2], temp);  
               
             }
             else{
@@ -91,7 +99,7 @@ function getOutput(output) {
             break;
         case "sell":
             if (isNaN(temp[1]) == false){
-                getRate(temp[2], temp);  
+                getRate(temp[2], temp); 
               
             }
             else{
@@ -101,6 +109,7 @@ function getOutput(output) {
             break;
         case "orders":
             showOrders();
+            writeToFile();
             return "";
             break;
         default:
@@ -128,7 +137,6 @@ function getRate(countryCode, temp){
                     var rate2 = (1/rate).toFixed(2);
                     console.log("\nOrder to " + temp[0] + " " + temp[1] + " " + temp[2] + " worth of BTC queued @ " + rate2 + " BTC/USD(" + rate +" BTC)");
                     buysellCurrency(temp[0], temp[1], temp[2], "UNFILLED", 1/rate);
-                    writeToFile();
                     }
             });
 }
